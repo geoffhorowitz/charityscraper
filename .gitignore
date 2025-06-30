@@ -1,3 +1,11 @@
+html_cache/
+soup_cache/
+bob*
+graveyard.py
+
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
