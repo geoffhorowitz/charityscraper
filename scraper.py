@@ -306,7 +306,7 @@ class CharityScraper:
           if ein == "EIN": continue
 
           if db_manager and ein in existing_eins:
-              self._log(f"EIN {ein} already exists in the database. Skipping.")
+              #self._log(f"EIN {ein} already exists in the database. Skipping.")
               continue
 
           self._log(f"Scraping data for EIN: {ein}...")
@@ -325,6 +325,7 @@ class CharityScraper:
 
               if not html_content:
                   self._log(f"Failed to fetch/read page for EIN: {ein}. Skipping.")
+                  time.sleep(random.uniform(1, 10)) # sleep for a random time between 1 and 10 seconds
                   continue
 
           #soup = self.parse_html(html_content, save_to_file=os.path.join('soup_cache', f"{ein}_soup.txt"))

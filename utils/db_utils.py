@@ -37,7 +37,57 @@ def remove_entry_by_ein_util(sqlite_db_path, table_name, ein):
     db.remove_entry_by_ein(table_name, ein)
     db.close()
 
+def count_entries_in_db(sqlite_db_path):
+    """
+    Prints the number of entries in each table of the SQLite database.
+    """
+    conn = sqlite3.connect(sqlite_db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = [row[0] for row in cursor.fetchall()]
+    for table in tables:
+        cursor.execute(f"SELECT COUNT(*) FROM {table}")
+        count = cursor.fetchone()[0]
+        print(f"Table '{table}': {count} entries")
+    conn.close()
+
+def standardize_db(sqlite_db_path, table_name='charities'):
+    """
+    Ensures the specified table has all required fields. Adds missing fields and sets values as needed.
+    - id: unique identifier, set to value of 'ein'
+    - cause: set to value of 'categories' if exists
+    """
+    required_fields = [
+        'id', 'name', 'website', 'budget', 'cause', 'geography', 'mission',
+        'vision', 'programs_summary', 'outcomes', 'impact', 'funding_needs',
+        'match_rating', 'fundable projects'
+    ]
+    conn = sqlite3.connect(sqlite_db_path)
+    cursor = conn.cursor()
+
+    # Get current columns
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    columns = [row[1] for row in cursor.fetchall()]
+
+    # Add missing columns
+    for field in required_fields:
+        if field not in columns:
+            cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN '{field}'")
+
+    # Set 'id' = 'ein' if 'ein' exists
+    if 'ein' in columns:
+        cursor.execute(f"UPDATE {table_name} SET id = ein WHERE ein IS NOT NULL")
+
+    # Set 'cause' = 'categories' if 'categories' exists
+    if 'categories' in columns:
+        cursor.execute(f"UPDATE {table_name} SET cause = categories WHERE categories IS NOT NULL")
+
+    conn.commit()
+    conn.close()
+
 
 if __name__ == "__main__":
-    sqlite_to_json('charity_data.db', 'charity_data.json')
+    #sqlite_to_json('charity_data.db', 'charity_data.json')
     #remove_entry_by_ein_util('charity_data.db', 'charities', '010445046')
+    #count_entries_in_db('charity_data.db')
+    standardize_db('charity_data.db')
